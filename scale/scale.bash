@@ -262,6 +262,7 @@ while true; do
 		    ;;
 		(*)
 		    echo "Usage:"
+		    echo "Please install iperf in vnodes first."
 		    echo "iperf install <list/all> to install iperf in the vnodes"
 		    echo "iperf <s> <vnode_id> to start the iperf server in the vnode"
                     echo "iperf <d> <vnode1_id(client)> <vnode2_id(server)> for testing direct link"
