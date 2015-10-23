@@ -50,6 +50,9 @@ init
 source
 config <num_successors> <num_chords> <num_on_demand> <num_inbound>
 run all
+iperf <connection_type> <client_vnode_id> <server_vnode_id>
+mem <vnode_id>
+ping <connection_type> <vnode_id> <vnode_id> <count>
 ```
 
 To view the IPOP network using the available visualizer, enter ```forward <port>``` within the bash script.
