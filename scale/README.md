@@ -62,5 +62,10 @@ _source_
 _config <args\>_
 _run [list/all]_
 _kill [list/all]_
-7. Clearing the platform
+7. Testing the IPOP network
+Enter the following commands to get the memory utilization of tincan on each node, test the network throughput and delay.
+_mem_
+_ping <args\>_
+_iperf <args\>_
+8. Clearing the platform
 To clear the platform, enter _exit_. This returns the script procedures to just after the _install_. To re-initialize the platform, enter _init [size\]_.
