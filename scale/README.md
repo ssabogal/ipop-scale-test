@@ -27,6 +27,9 @@ source         |Instruct nodes to receive contents of directory _node_. Nodes th
 config <args\> |Instruct nodes to create configuration files for each IPOP-node using arguments _args_.
 forward <port\>|Instruct one node to run a forwarding program using port _port_.
 run [list/all] |Instruct nodes to run the _list_ of, or _all_, IPOP-nodes.
+mem <vnode_id> |Get the memory utilization information of tincan in the specific node
+iperf <args\>  |Test the network throught between two nodes through virtual link or direct link
+ping <args\>   |Test the network delay between two nodes through virtual link or direct link
 kill [list/all]|Instruct nodes to run the _list_ of, or _all_, IPOP-nodes.
 quit           |Quit this program.
 
