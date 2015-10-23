@@ -108,7 +108,7 @@ case $1 in
             sudo bash -c "
                 lxc-clone default node$i;
                 sudo lxc-start -n node$i --daemon;
-                sudo lxc-attach -n node$i -- bash -c 'sudo mkdir /dev/net; sudo mknod /dev/net/tun c 10 200; sudo chmod 0666 /dev/net/tun';
+                sudo lxc-attach -n node$i -- bash -c 'sudo mkdir /dev/net; sudo mknod /dev/net/tun c 10 200; sudo chmod 0666 /dev/net/tun;';
             " &
         done
         wait 
@@ -201,7 +201,7 @@ case $1 in
             min_num_chords=${10}
             max_num_chords=${11}
 
-            sudo lxc-attach -n "node$i" -- bash -c "bash $LXC_IPOP_SCRIPT config $xmpp_username $xmpp_password $xmpp_host $stun '$turn' $ipv4 $ipv4_mask $central_visualizer $central_visualizer_ipv4 $central_visualizer_port $num_bootstrap_links $num_successors $min_num_chords $max_num_chords" &
+            sudo lxc-attach -n "node$i" -- bash -c "bash $LXC_IPOP_SCRIPT config $xmpp_username $xmpp_password $xmpp_host $stun '$turn' $ipv4 $ipv4_mask $central_visualizer $central_visualizer_ipv4 $central_visualizer_port $num_bootstrap_links $num_successors $min_num_chords $max_num_chords;" &
         done
         wait
         ;;
@@ -227,6 +227,56 @@ case $1 in
             sudo lxc-attach -n "node$vnode" -- bash -c "bash $LXC_IPOP_SCRIPT kill"
         done
         ;;
+    ("mem")
+        vnode_list=($2)
+
+        for vnode in ${vnode_list[@]}; do
+	    tincan_pid=$(sudo lxc-attach -n "node$vnode" -- ps aux | grep tincan | awk '{print$2}' | head -n 1)
+            sudo lxc-attach -n "node$vnode" -- top -n 1 -b -p $tincan_pid
+        done
+        ;;
+    ("iperf")
+	    case $2 in
+		("install")
+		    vnode_list=($3)
+        	    for vnode in ${vnode_list[@]}; do
+            		sudo lxc-attach -n "node$vnode" -- sudo apt-get install iperf
+        	    done
+                    ;;
+                ("c")
+		    vnode=$3
+		    ip=$4
+		    sudo lxc-attach -n "node$vnode" -- iperf -c $ip
+                    ;;
+                ("s")
+		    vnode=$3
+		    sudo lxc-attach -n "node$vnode" -- iperf -s -D
+                    ;;
+                ("kill")
+		    vnode=$3
+		    iperf_pid=$(sudo lxc-attach -n "node$vnode" -- ps aux | grep iperf | awk '{print$2}' | head -n 1)
+		    sudo lxc-attach -n "node$vnode" -- sudo kill -9 $iperf_pid
+                    ;;
+            esac
+        ;;
+    ("ping")
+	vnode=$2
+	ip=$3
+	count=$4
+        sudo lxc-attach -n "node$vnode" -- ping $ip -c $count 
+	;;
+    ("getip")
+	vnode=$2
+	node_ETH_DEV=$(sudo lxc-attach -n "node$vnode" -- ifconfig | grep eth | awk '{print $1}' | head -n 1)
+	node_IPv4=$(sudo lxc-attach -n "node$vnode" -- ifconfig $node_ETH_DEV | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}')
+	echo $node_IPv4
+	;;
+    ("getvip")
+	vnode=$2
+	node_IPOP_DEV=$(sudo lxc-attach -n "node$vnode" -- ifconfig | grep ipop | awk '{print $1}' | head -n 1)
+	node_Vip=$(sudo lxc-attach -n "node$vnode" -- ifconfig $node_IPOP_DEV | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}')
+	echo $node_Vip
+	;;
     (*)
         echo "invalid operation"
         ;;
