@@ -233,19 +233,18 @@ while true; do
             	    for i in $(seq 0 $(($NR_NODES - 1))); do
                 	ssh ${NODES[$i]} "bash $NODE_NODE_SCRIPT iperf install '${node_list[$i]}' &" &
             	    done
-		    
-		#	for i in $(seq 0 $(($SIZE-1))); do
-		#	index=$(($i / ($SIZE / $NR_NODES)))
-		#	ssh ${NODES[$index]} "bash $NODE_NODE_SCRIPT iperf install $i &" &
-		#    done
-		    ;;		    
+		    ;;	
+	 	("s") #start the iperf server on the vnode
+		    vnode_id=${args[1]}
+		    index=$(($vnode_id / ($SIZE / $NR_NODES)))
+		    ssh ${NODES[$index]} "bash $NODE_NODE_SCRIPT iperf s $vnode_id &" &
+		    ;;	    
 		("d")
 		    vnode1_id=${args[1]}
            	    vnode2_id=${args[2]}
         	    index1=$(($vnode1_id / ($SIZE / $NR_NODES)))
 	            index2=$(($vnode2_id / ($SIZE / $NR_NODES)))
-                    vnode2_ip=$(ssh ${NODES[$index2]} "bash $NODE_NODE_SCRIPT getip $vnode2_id")
-		    ssh ${NODES[$index2]} "bash $NODE_NODE_SCRIPT iperf s $vnode2_id &" &
+                    vnode2_ip=$(ssh ${NODES[$index2]} "bash $NODE_NODE_SCRIPT getip $vnode2_id")		    
                     ssh ${NODES[$index1]} "bash $NODE_NODE_SCRIPT iperf c $vnode1_id $vnode2_ip"
 		    ;;
 		("v")
@@ -254,10 +253,9 @@ while true; do
            	    index1=$(($vnode1_id / ($SIZE / $NR_NODES)))
          	    index2=$(($vnode2_id / ($SIZE / $NR_NODES)))
                     vnode2_vip=$(ssh ${NODES[$index2]} "bash $NODE_NODE_SCRIPT getvip $vnode2_id")
-		    ssh ${NODES[$index2]} "bash $NODE_NODE_SCRIPT iperf s $vnode2_id &" &
 		    ssh ${NODES[$index1]} "bash $NODE_NODE_SCRIPT iperf c $vnode1_id $vnode2_vip"
 		    ;;
-		("kill")
+		("kill") #shutdown the iperf server on the vnode
 		    vnode_id=${args[1]}
 		    index=$(($vnode_id / ($SIZE / $NR_NODES)))
 		    ssh ${NODES[$index]} "bash $NODE_NODE_SCRIPT iperf kill $vnode_id"
@@ -265,6 +263,7 @@ while true; do
 		(*)
 		    echo "Usage:"
 		    echo "iperf install <list/all> to install iperf in the vnodes"
+		    echo "iperf <s> <vnode_id> to start the iperf server in the vnode"
                     echo "iperf <d> <vnode1_id(client)> <vnode2_id(server)> for testing direct link"
                     echo "iperf <v> <vnode1_id(client)> <vnode2_id(server)> for testing virtual link"
                     echo "iperf kill <vnode_id> to kill the iperf server process on that node" 		
