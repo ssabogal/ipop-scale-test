@@ -94,6 +94,7 @@ case $1 in
             sudo iptables -A INPUT -p udp --sport $i -j ACCEPT
             sudo iptables -A OUTPUT -p udp --sport $i -j ACCEPT
         done
+        ulimit -c unlimited
         ;;
     ("init-containers")
         min=$2
@@ -108,6 +109,7 @@ case $1 in
             sudo bash -c "
                 lxc-clone default node$i;
                 sudo lxc-start -n node$i --daemon;
+                sudo lxc-attach -n node$i -- bash -c 'sudo apt-get update; sudo apt-get install valgrind -y';
                 sudo lxc-attach -n node$i -- bash -c 'sudo mkdir /dev/net; sudo mknod /dev/net/tun c 10 200; sudo chmod 0666 /dev/net/tun';
             " &
         done

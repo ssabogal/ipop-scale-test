@@ -12,6 +12,7 @@ LOG_CTR="./ctr.log"
 case $1 in
 
     ("run")
+        sudo ulimit -c unlimited
         pid=$(ps aux | grep -v grep | grep $IPOP_TINCAN | awk '{print $2}')
         if [ "$pid" != "" ]; then
             echo -e "IPOP is already running:\n$pid"

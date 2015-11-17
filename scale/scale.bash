@@ -1,6 +1,12 @@
 #!/bin/bash
 
 # Ubuntu 15.04 URN: urn:publicid:IDN+emulab.net+image+emulab-ops:UBUNTU15-04-64-STD
+RELEASE=https://github.com/ipop-project/downloads/releases/download/15.11.0.b1/ipop-v15.11.0-Beta1_Ubuntu14.tar.gz
+wget $RELEASE
+tar zxvf ipop-v15.11.0-Beta1_Ubuntu14.tar.gz
+cp -r ipop-v15.11.0-Beta1_Ubuntu14/controllers/controller node/ipop/
+
+
 
 cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
