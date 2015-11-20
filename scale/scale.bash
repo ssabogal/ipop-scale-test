@@ -64,16 +64,12 @@ while true; do
         ("install")
             # compress local sources; transfer sources to each node; nodes install
             tar -zcvf node.tar.gz $NODE_PATH
-            tmp=''
             for node in ${NODES[@]}; do
-                if [ "$tmp" != "$node" ];then
-                    tmp=$node
-                    bash -c "
-                    echo 'put node.tar.gz' | sftp $node;
-                    ssh $node 'tar xf node.tar.gz; bash $NODE_NODE_SCRIPT install';
-                    " &
-                    ssh $node "sudo bash -c 'echo "soft core 100" >> /etc/security/limits.conf'";
-                fi
+                bash -c "
+                echo 'put node.tar.gz' | sftp $node;
+                ssh $node 'tar xf node.tar.gz; bash $NODE_NODE_SCRIPT install';
+                " &
+                ssh $node "sudo bash -c 'echo "*    soft    core unlimited" >> /etc/security/limits.conf'";
             done
             wait
             ;;
