@@ -5,6 +5,7 @@ RELEASE=https://github.com/ipop-project/downloads/releases/download/15.11.0.b1/i
 wget $RELEASE
 tar zxvf ipop-v15.11.0-Beta1_Ubuntu14.tar.gz
 cp -r ipop-v15.11.0-Beta1_Ubuntu14/controllers/controller node/ipop/
+rm -rf ipop-v15*
 
 
 
@@ -63,11 +64,16 @@ while true; do
         ("install")
             # compress local sources; transfer sources to each node; nodes install
             tar -zcvf node.tar.gz $NODE_PATH
+            tmp=''
             for node in ${NODES[@]}; do
-                bash -c "
+                if [ "$tmp" != "$node" ];then
+                    tmp=$node
+                    bash -c "
                     echo 'put node.tar.gz' | sftp $node;
                     ssh $node 'tar xf node.tar.gz; bash $NODE_NODE_SCRIPT install';
-                " &
+                    " &
+                    ssh $node "sudo bash -c 'echo "soft core 100" >> /etc/security/limits.conf'";
+                fi
             done
             wait
             ;;
