@@ -14,14 +14,14 @@ import json                  # decoding packets
 # canvas object - graphical user interface tool
 class Canvas(object):
     # initialize canvas
-    def __init__(self, width, height, margin, title):
+    def __init__(self, size, header, margin, title):
         # canvas constants
-
-        self.WIDTH  = width
-        self.HEIGHT = height
+        self.WIDTH  = size
+        self.HEADER = header
+        self.HEIGHT = size + self.HEADER
         self.MARGIN = margin
         self.MID_X  = self.WIDTH / 2
-        self.MID_Y  = self.HEIGHT / 2
+        self.MID_Y  = (self.HEIGHT / 2) + (self.HEADER / 2)
         self.RADIUS = min(self.MID_X, self.MID_Y) - self.MARGIN
 
         # create canvas
@@ -152,7 +152,7 @@ def main():
 
     # set runnable state; create canvas and graph objects
     runnable = True
-    canvas = Canvas(canvas_sz, canvas_sz, 50, 'IPOP Network Visualizer')
+    canvas = Canvas(canvas_sz, 75, 50, 'IPOP Network Visualizer')
     network = Network(nr_nodes, ip4_mask_addr)
 
     # launch listener

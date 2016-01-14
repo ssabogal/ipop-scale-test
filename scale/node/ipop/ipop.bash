@@ -26,7 +26,7 @@ case $1 in
 
         if [ "$2" == '--verbose' ]; then
             # run IPOP tincan
-            sudo $IPOP_TINCAN &
+            sudo $IPOP_TINCAN &> $LOG_TIN &
             python -m $IPOP_CONTROLLER -c $IPOP_CONFIG &
         else
             # run IPOP tincan
@@ -67,7 +67,12 @@ case $1 in
         threshold_on_demand=${20}
 
         interval_management=15
+
+        use_central_visualizer=$central_visualizer
         interval_central_visualizer=5
+
+        interval_ping=60
+        num_pings=5
 
         # create config file
         echo -e \
@@ -76,13 +81,13 @@ case $1 in
             "\n    \"xmpp_username\": \"$xmpp_username\","\
             "\n    \"xmpp_password\": \"$xmpp_password\","\
             "\n    \"xmpp_host\": \"$xmpp_host\","\
-            "\n    \"tincan_logging\": 2,"\
+            "\n    \"tincan_logging\": 0,"\
             "\n    \"vpn_type\": \"GroupVPN\","\
             "\n    \"ip4_mask\": $ipv4_mask,"\
             "\n    \"stat_report\": false"\
             "\n  },"\
             "\n  \"Logger\": {"\
-            "\n    \"controller_logging\": \"DEBUG\""\
+            "\n    \"controller_logging\": \"INFO\""\
             "\n  },"\
             "\n  \"TincanSender\": {"\
             "\n    \"switchmode\": 0,"\
@@ -105,8 +110,11 @@ case $1 in
             "\n    \"threshold_on_demand\": $threshold_on_demand,"\
             "\n    \"timer_interval\": 1,"\
             "\n    \"interval_management\": $interval_management,"\
+            "\n    \"use_central_visualizer\": $use_central_visualizer,"\
             "\n    \"interval_central_visualizer\": $interval_central_visualizer,"\
-            "\n    \"dependencies\": [\"Logger\", \"CentralVisualizer\"]"\
+            "\n    \"num_pings\": $num_pings,"\
+            "\n    \"interval_ping\": $interval_ping,"\
+            "\n    \"dependencies\": [\"Logger\"]"\
             "\n  },"\
             "\n  \"LinkManager\": {"\
             "\n    \"dependencies\": [\"Logger\"]"\
@@ -121,7 +129,7 @@ case $1 in
             "\n    \"StatReport\": {"\
             "\n    \"stat_report\": false,"\
             "\n    \"stat_server\": \"metrics.ipop-project.org\","\
-            "\n    \"stat_server_port\": 5000,"\
+            "\n    \"stat_server_port\": 8080,"\
             "\n    \"timer_interval\": 200"\
             "\n  },"\
             "\n  \"CentralVisualizer\": {"\
