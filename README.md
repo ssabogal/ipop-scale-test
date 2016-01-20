@@ -11,7 +11,7 @@ This project is composed of scripts for automating the preparation and simulatio
 
 ### Usage
 
-#### Obtaining the source code
+#### Obtaining the controller development source code
 
 ```
 git clone https://github.com/ipop-project/controllers.git
@@ -21,8 +21,6 @@ git clone https://github.com/ssabogal/ipop-gvpn-scale-test.git
 cd ipop-gvpn-scale-test/
 mv ../controllers/controller scale/node/ipop/
 ```
-
-Note: A precompiled binary for **IPOP-Tincan** is available in ```scale/node/ipop```. The latest IPOP-Tincan can be obtained by downloading the latest archive from the releases or by building from source [2].
 
 #### Preparing physical nodes (using CloudLab)
 
@@ -63,6 +61,7 @@ Run the bash script:
 
 Enter the following commands (see the ```README.md``` in ```scale/``` for information about what these commands do):
 ```
+download
 accept    # enter 'yes' if prompted
 install
 init
@@ -95,3 +94,9 @@ In scale.bash:
 In a separate terminal:
 
 ```python3 scale/visualizer.py tcp <forwarder ipv4> <forwarder port> <SIZE> <GUI window size (length)>```
+
+#### Advanced
+
+By default, the CloudLab experiments use the Ubuntu 15.04 image. In order to use the Ubuntu 14.04 LTS image, modify ```scale/node/node.bash``` and set the variable ```NEW_TEST``` to ```false``` before using ```scale/scale.bash```. The usage for either image is the same.
+
+A reference profile with one physical-node and 20 LXC-nodes is available: ```IPOP_SCALE_TEST_1_TRUSTY```

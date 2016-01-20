@@ -2,14 +2,9 @@
 
 # Ubuntu 15.04 URN: urn:publicid:IDN+emulab.net+image+emulab-ops:UBUNTU15-04-64-STD
 
-cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-
-function prompt()
-{
-    [[ "$1" != '' ]]
-    read -p '> ' prompt_ret
-    echo $prompt_ret
-}
+DOWNLOAD="https://github.com/ipop-project/Downloads/releases/download"
+RELEASEDIR="v16.01.0.rc3"
+RELEASENAME="ipop-v16.01.0-RC3_Ubuntu"
 
 CONF_FILE="./scale.cfg"
 NODE_PATH="./node"
@@ -20,6 +15,15 @@ NR_NODES=0
 SERVER=''
 FORWARDER=''
 SIZE=0
+
+cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+function prompt()
+{
+    [[ "$1" != '' ]]
+    read -p '> ' prompt_ret
+    echo $prompt_ret
+}
 
 # parse config file
 while read line; do
@@ -48,6 +52,16 @@ while true; do
 
     case $cmd in
 
+        ("download")
+            # download controller sources and ipop-tincan binary from ipop-project/Downloads
+            # TODO static link address
+            wget $DOWNLOAD/$RELEASEDIR/$RELEASENAME.tar.gz
+            tar xf $RELEASENAME.tar.gz
+            cp -r $RELEASENAME/controller node/ipop/
+            cp $RELEASENAME/ipop-tincan node/ipop/
+            rm -r $RELEASENAME
+            rm $RELEASENAME.tar.gz
+            ;;
         ("accept")
             echo "enter 'yes' to add a node to the list of known hosts"
             for node in ${NODES[@]}; do
@@ -189,6 +203,7 @@ while true; do
         (*)
             echo 'usage:'
             echo '  platform management:'
+            echo '    download           : download controller sources and ipop-tincan binary'
             echo '    accept             : manually enable connections'
             echo '    install            : install/prepare resources'
             echo '    init    [size]     : initialize platform'
