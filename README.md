@@ -11,17 +11,6 @@ This project is composed of scripts for automating the preparation and simulatio
 
 ### Usage
 
-#### Obtaining the controller development source code
-
-```
-git clone https://github.com/ipop-project/controllers.git
-cd controllers/; git checkout devel; cd -
-
-git clone https://github.com/ssabogal/ipop-gvpn-scale-test.git
-cd ipop-gvpn-scale-test/
-mv ../controllers/controller scale/node/ipop/
-```
-
 #### Preparing physical nodes (using CloudLab)
 
 ##### Pre-defined profiles
@@ -48,7 +37,7 @@ Create a profile, with at least one node and each node containing the following 
 
 ##### Create an experiment
 
-Note: ensure that the host's SSH keys are applied to the CloudLab account.
+Note: ensure that the host's SSH keys are added to the CloudLab account.
 
 Instantiate this profile as to create an experiment.
 
@@ -95,8 +84,21 @@ In a separate terminal:
 
 ```python3 scale/visualizer.py tcp <forwarder ipv4> <forwarder port> <SIZE> <GUI window size (length)>```
 
-#### Advanced
+### Advanced
+
+#### Using the Ubuntu 14.04 LTS image in CloudLab
 
 By default, the CloudLab experiments use the Ubuntu 15.04 image. In order to use the Ubuntu 14.04 LTS image, modify ```scale/node/node.bash``` and set the variable ```NEW_TEST``` to ```false``` before using ```scale/scale.bash```. The usage for either image is the same.
 
 A reference profile with one physical-node and 20 LXC-nodes is available: ```IPOP_SCALE_TEST_1_TRUSTY```
+
+#### Obtaining the controller development source code
+
+```
+git clone https://github.com/ipop-project/controllers.git
+cd controllers/; git checkout devel; cd -
+
+git clone https://github.com/ssabogal/ipop-gvpn-scale-test.git
+cd ipop-gvpn-scale-test/
+mv ../controllers/controller scale/node/ipop/
+```
