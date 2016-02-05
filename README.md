@@ -82,7 +82,7 @@ In scale.bash:
 
 In a separate terminal:
 
-```python3 scale/visualizer.py tcp <forwarder ipv4> <forwarder port> <SIZE> <GUI window size (length)>```
+```python3 visualizer.py tcp <IPv4 of node> <recv_port> <init_ip4> <nr_nodes> <canvas_sz>```
 
 ### Advanced
 
