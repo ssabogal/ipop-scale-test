@@ -54,22 +54,28 @@ class Network(object):
             self.y          = y
             self.n_x        = n_x
             self.n_y        = n_y
-            self.state      = 0
+            self.time       = 0
+            self.p2p_state  = ""
             self.links      = {
-                "successor": [],
-                "chord": [],
-                "on_demand": [],
-                "inbound": []
+                "successor": [], "chord": [], "on_demand": [], "inbound": []
             }
 
-    def __init__(self, nr_nodes, ip4_mask_addr):
+    def __init__(self, nr_nodes, ip4_addr):
         self.uid_nid_table = {} # uid to node index mapping
         self.uid_ip4_table = {} # uid to ipv4 mapping
         self.nodes = []         # list of nodes indexed by node index
 
         # create nodes (sorted by uid)
+        parts = ip4_addr.split('.')
+        tmp = (int(parts[0]) << 24) + (int(parts[1]) << 16) + (int(parts[2]) << 8) + int(parts[3])
+
         for i in range(nr_nodes):
-            ip4 = ip4_mask_addr + str(i // 256) + "." + str(i % 256)
+            p0 = ((tmp + i) >> 24) & 0xFF
+            p1 = ((tmp + i) >> 16) & 0xFF
+            p2 = ((tmp + i) >>  8) & 0xFF
+            p3 = ((tmp + i) >>  0) & 0xFF
+
+            ip4 = str(p0) + "." + str(p1) + "." + str(p2) + "." + str(p3)
             uid = hashlib.sha1(bytes(ip4,'utf-8')).hexdigest()[:40]
             self.uid_ip4_table[uid] = ip4
 
@@ -124,10 +130,14 @@ def listener(protocol, recv_ipv4, recv_port):
         print(network.uid_ip4_table[msg["uid"]])
         node_index = network.uid_nid_table[msg["uid"]]
 
-        network.nodes[node_index].state      = int(time.time())
+        network.nodes[node_index].time = int(time.time())
 
-        for con_type in ["successor", "chord", "on_demand", "inbound"]:
-            network.nodes[node_index].links[con_type] = [network.uid_nid_table[x] for x in msg[con_type]]
+        # parse information sentby the BaseTopologyManager
+        if (msg["type"] == "BaseTopologyManager"):
+            network.nodes[node_index].p2p_state = msg["p2p_state"]
+
+            for con_type in ["successor", "chord", "on_demand", "inbound"]:
+                network.nodes[node_index].links[con_type] = [network.uid_nid_table[x] for x in msg[con_type]]
 
 def main():
     global runnable
@@ -139,21 +149,17 @@ def main():
         protocol  = str(sys.argv[1])
         recv_ipv4 = str(sys.argv[2])
         recv_port = int(sys.argv[3])
-        nr_nodes  = int(sys.argv[4])
-        canvas_sz = int(sys.argv[5])
+        ip4_addr  = str(sys.argv[4])
+        nr_nodes  = int(sys.argv[5])
+        canvas_sz = int(sys.argv[6])
     except:
-        print('usage: ' + sys.argv[0] + ' <protocol> <recv_ipv4> <recv_port> <nr_nodes> <canvas_sz>')
+        print('usage: ' + sys.argv[0] + ' <protocol> <recv_ipv4> <recv_port> <init_ip4> <nr_nodes> <canvas_sz>')
         sys.exit()
-
-    # hard-coded arguments
-    ip4_addr = "172.31.0.0"
-    ip4_mask = 16
-    ip4_mask_addr = "172.31."
 
     # set runnable state; create canvas and graph objects
     runnable = True
     canvas = Canvas(canvas_sz, 75, 50, 'IPOP Network Visualizer')
-    network = Network(nr_nodes, ip4_mask_addr)
+    network = Network(nr_nodes, ip4_addr)
 
     # launch listener
     thread_listener = Thread(target=listener, args=(protocol, recv_ipv4, recv_port,))
@@ -168,7 +174,7 @@ def main():
 
         # draw links
         for node in network.nodes:
-            if int(time.time()) < node.state + 10: # assumed online
+            if int(time.time()) < node.time + 10: # assumed online
 
                 for peer in node.links["on_demand"]:
                     canvas.draw_line(node.x, node.y, network.nodes[peer].x, network.nodes[peer].y, 'orange')
@@ -182,8 +188,15 @@ def main():
 
         # draw nodes
         for node in network.nodes:
-            if int(time.time()) < node.state + 10: # assumed online
-                canvas.draw_circle(node.x, node.y, 5, 'green')
+            if int(time.time()) < node.time + 10: # assumed online
+                if node.p2p_state == "started":
+                    canvas.draw_circle(node.x, node.y, 5, 'blue')
+                elif node.p2p_state == "searching":
+                    canvas.draw_circle(node.x, node.y, 5, 'yellow')
+                elif node.p2p_state == "connecting":
+                    canvas.draw_circle(node.x, node.y, 5, 'orange')
+                elif node.p2p_state == "connected":
+                    canvas.draw_circle(node.x, node.y, 5, 'green')
                 nr_online_nodes += 1
             else:
                 canvas.draw_circle(node.x, node.y, 5, 'red')
@@ -195,7 +208,7 @@ def main():
         canvas.draw_text(22, 55, "chords")
         canvas.draw_text(34, 70, "on-demand")
 
-        canvas.draw_text(120, 10, ip4_addr + "/" + str(ip4_mask))
+        canvas.draw_text(120, 10, ip4_addr + " " + str(nr_nodes) + " nodes")
         canvas.draw_text(120, 25, nr_online_nodes)
         canvas.draw_text(120, 40, nr_successor_links)
         canvas.draw_text(120, 55, nr_chord_links)
