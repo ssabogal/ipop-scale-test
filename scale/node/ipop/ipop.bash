@@ -81,6 +81,7 @@ case $1 in
             "\n    \"xmpp_username\": \"$xmpp_username\","\
             "\n    \"xmpp_password\": \"$xmpp_password\","\
             "\n    \"xmpp_host\": \"$xmpp_host\","\
+            "\n    \"xmpp_port\": 5222,"\
             "\n    \"tincan_logging\": 2,"\
             "\n    \"vpn_type\": \"GroupVPN\","\
             "\n    \"ip4_mask\": $ipv4_mask,"\
