@@ -94,9 +94,6 @@ The ```config``` command supports user-configurable options for generating highl
 
 	+ Example: ```config svpn``` defines a SocialVPN topology.
 
-	
-
-To view the IPOP network using the available visualizer, enter ```forward <port>``` within the bash script.
 
 #### Using the visualizer:
 
