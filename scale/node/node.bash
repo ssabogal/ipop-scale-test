@@ -33,7 +33,7 @@ TURNSERVER_USERS='/etc/turnserver/turnusers.txt'
 
 DEFAULT_LXC_CONFIG='/var/lib/lxc/default/config'
 
-FORWARDER_PROGRAM="./cv_forwarder.py"
+FORWARDER_PROGRAM="./forwarder.py"
 IPOP_PATH="./ipop"
 LXC_IPOP_SCRIPT='/home/ubuntu/ipop/ipop.bash'
 
@@ -219,43 +219,21 @@ case $1 in
         wait
         ;;
     ("config")
+        params=${@:2}
+
         # create config file for each node
         for i in $(seq $min $max); do
-            # parse and prepare arguments
-            xmpp_username="node$i@ejabberd"
-            xmpp_password="password"
-            xmpp_host=$2
-            stun=$3
-            turn='{"server": "'$4'", "user": "node'$i'", "pass": "password"}'
-            ipv4='172.31.'$(($i / 256))'.'$(($i % 256))
-            ipv4_mask=16
-            central_visualizer=$5
-            central_visualizer_ipv4=$6
-            central_visualizer_port=$7
-            num_successors=$8
-            num_chords=$9
-            num_on_demand=${10}
-            num_inbound=${11}
-
-            ttl_link_initial=${12}
-            ttl_link_pulse=${13}
-
-            ttl_chord=${14}
-            ttl_on_demand=${15}
-
-            threshold_on_demand=${16}
-
-            sudo lxc-attach -n "node$i" -- bash -c "bash $LXC_IPOP_SCRIPT config $xmpp_username $xmpp_password $xmpp_host $stun '$turn' $ipv4 $ipv4_mask $central_visualizer $central_visualizer_ipv4 $central_visualizer_port $num_successors $num_chords $num_on_demand $num_inbound $ttl_link_initial $ttl_link_pulse $ttl_chord $ttl_on_demand $threshold_on_demand" &
+            sudo lxc-attach -n "node$i" -- bash -c "bash $LXC_IPOP_SCRIPT config $i $params" &
         done
         wait
         ;;
     ("forward")
-        dbg_visual_ipv4=$2
-        dbg_visual_port=$3
-        forward_port=$4
+        forwarder_addr=$2
+        forwarder_port=$3
+        forwarded_port=$4
 
         ps aux | grep -v grep | grep $FORWARDER_PROGRAM | awk '{print $2}' | xargs sudo kill -9
-        python3 $FORWARDER_PROGRAM $dbg_visual_ipv4 $dbg_visual_port $forward_port
+        python3 $FORWARDER_PROGRAM $forwarder_addr $forwarder_port $forwarded_port
         ;;
     ("run")
         vnode_list=($2)

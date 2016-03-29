@@ -1,13 +1,16 @@
-# Scale Test for the IPOP Structured P2P GroupVPN Controller
+# Scale-Test for IPOP
 
 ### Description
 
-This project is composed of scripts for automating the preparation and simulation of a testbed for scalable testing of the IPOP network using structured-p2p-gvpn-controller, which has been pushed upstream [1].
+This project composes a set of scripts for automating the deployment and simulation of IPOP networks. Scale-Test supports both GroupVPN (using a structured peer-to-peer topology) and SocialVPN (using an unstructured, social topology),
 
-[1] ```https://github.com/ipop-project/controllers```
+##### References
 
-[2] ```http://ipop-project.org/ or https://github.com/ipop-project```
+[1] [IPOP](http://ipop-project.org/) 
 
+[2] [IPOP GitHub](https://github.com/ipop-project) 
+
+[3] [Scale-Test concept](https://github.com/ipop-project/ipop-project.github.io/wiki/Testing-Your-Build) 
 
 ### Usage
 
@@ -46,29 +49,52 @@ Instantiate this profile as to create an experiment.
 Open the ```List View``` tab to view the connections. Copy the connections (of the form ```<username>@<hostname>```) into ```scale/scale.cfg``` as ```NODE```, ```SERVER```, or ```FORWARDER```. Also specify the ```SIZE``` (the number of IPOP instances)
 
 Run the bash script:
+
 ```bash scale/scale.bash```
 
 Enter the following commands (see the ```README.md``` in ```scale/``` for information about what these commands do):
+
 ```
 download
 accept    # enter 'yes' if prompted
 install
 init
 source
-config <num_successors> <num_chords> <num_on_demand> <num_inbound> <ttl_link_initial> <ttl_link_pulse> <ttl_chord> <ttl_on_demand> <threshold_on_demand>
+config <gvpn | svpn> [options]
 run all
 ```
-Example: ```config 2 3 2 8 60 30 180 60 128``` defines the BaseTopologyManager to support:
 
-* about 2 successors
-* up to 3 chords
-* up to 2 on-demand links
-* about 8 in-bound links
-* initializing links have a time-to-live of 60 seconds before they are trimmed
-* established links have a time-to-live of 30 seconds before they are trimmed
-* chords have a time-to-live of 180 seconds before they may be replaced
-* on-demand links have a time-to-live of 60 seconds before they undergoes a threshold test
-* on-demand links have a threshold of 128 transmitted bytes per second before they are trimmed
+#### Configuration
+
+The ```config``` command supports user-configurable options for generating highly customized IPOP configurations.
+
++ For GroupVPN:
+
+	```
+	config gvpn <num_successors> <num_chords> <num_on_demand> <num_inbound> <ttl_link_initial> <ttl_link_pulse> <ttl_chord> <ttl_on_demand> <threshold_on_demand>
+	```
+
+	+ Example: ```config gvpn 2 3 2 8 60 30 180 60 128``` defines a GroupVPN topology with the follow characteristics:
+
+		+ about 2 successors
+		+ up to 3 chords
+		+ up to 2 on-demand links
+		+ about 8 in-bound links
+		+ initializing links have a time-to-live of 60 seconds before they are trimmed
+		+ established links have a time-to-live of 30 seconds before they are trimmed
+		+ chords have a time-to-live of 180 seconds before they may be replaced
+		+ on-demand links have a time-to-live of 60 seconds before they undergoes a threshold test
+		+ on-demand links have a threshold of 128 transmitted bytes per second before they are trimmed
+
++ For SocialVPN:
+
+	```
+	config svpn
+	```
+
+	+ Example: ```config svpn``` defines a SocialVPN topology.
+
+	
 
 To view the IPOP network using the available visualizer, enter ```forward <port>``` within the bash script.
 
@@ -78,27 +104,15 @@ Note: the visualizer depends on TKinter, use ```pacman -S tk``` (in Archlinux) o
 
 In scale.bash:
 
-```forward <forwarder port>```
+```
+forward <forwarder port>
+visualize <forwarder port> <gvpn | svpn>
+```
 
-In a separate terminal:
+### Other
 
-```python3 visualizer.py tcp <IPv4 of node> <recv_port> <init_ip4> <nr_nodes> <canvas_sz>```
+#### Using the Ubuntu 14.04 LTS
 
-### Advanced
-
-#### Using the Ubuntu 14.04 LTS image in CloudLab
-
-By default, the CloudLab experiments use the Ubuntu 15.04 image. In order to use the Ubuntu 14.04 LTS image, modify ```scale/node/node.bash``` and set the variable ```NEW_TEST``` to ```false``` before using ```scale/scale.bash```. The usage for either image is the same.
+By default, Scale-Test only supports Ubuntu 15.04. To use Ubuntu 14.04 LTS, modify ```scale/node/node.bash``` and set the variable ```NEW_TEST``` to ```false``` prior to deployment. The usage for Scale-Test is the same.
 
 A reference profile with one physical-node and 20 LXC-nodes is available: ```IPOP_SCALE_TEST_1_TRUSTY```
-
-#### Obtaining the controller development source code
-
-```
-git clone https://github.com/ipop-project/controllers.git
-cd controllers/; git checkout devel; cd -
-
-git clone https://github.com/ssabogal/ipop-gvpn-scale-test.git
-cd ipop-gvpn-scale-test/
-mv ../controllers/controller scale/node/ipop/
-```

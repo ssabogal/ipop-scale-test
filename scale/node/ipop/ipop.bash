@@ -4,7 +4,7 @@ cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 IPOP_TINCAN="./ipop-tincan"
 IPOP_CONTROLLER="controller.Controller"
-IPOP_CONFIG="./controller/modules/gvpn-config.json"
+IPOP_CONFIG="./ipop-config.json"
 
 LOG_TIN="./tin.log"
 LOG_CTR="./ctr.log"
@@ -40,107 +40,217 @@ case $1 in
         ps aux | grep -v grep | grep $IPOP_CONTROLLER | awk '{print $2}' | xargs sudo kill -9
         ;;
     ("config")
-        # parse arguments
-        xmpp_username=$2
-        xmpp_password=$3
-        xmpp_host=$4
-        stun=$5
-        turn=$6
-        ipv4=$7
-        ipv4_mask=$8
+        ipop_id=$2
+        vpn_type=$3
+        serv_addr=$4
+        fwdr_addr=$5
+        fwdr_port=$6
 
-        central_visualizer=$9
-        central_visualizer_ipv4=${10}
-        central_visualizer_port=${11}
- 
-        num_successors=${12}
-        num_chords=${13}
-        num_on_demand=${14}
-        num_inbound=${15}
+        ### svpn configuration
+        if [ "$vpn_type" == "svpn" ]; then
 
-        ttl_link_initial=${16}
-        ttl_link_pulse=${17}
+            # options reserved by scale-test
+            CFx_xmpp_username="node${ipop_id}@ejabberd"
+            CFx_xmpp_password="password"
+            CFx_xmpp_host=$serv_addr
+            CFx_xmpp_port='5222'
+            CFx_vpn_type='SocialVPN'
+            TincanSender_stun="${serv_addr}:3478"
+            TincanSender_turn="{\"server\":\"$serv_addr:19302\",\"user\":\"node${ipop_id}\",\"pass\":\"password\"}"
+            AddressMapper_ip4='172.31.0.100'
+            CFx_ip4_mask='16'
+            CentralVisualizer_name=$ipop_id
+            CentralVisualizer_central_visualizer_addr=$fwdr_addr
+            CentralVisualizer_central_visualizer_port=$fwdr_port
 
-        ttl_chord=${18}
-        ttl_on_demand=${19}
+            CFx_tincan_logging='2'
+            Logger_controller_logging='INFO'
+            CentralVisualizer_enabled='true'
+            CentralVisualizer_central_visualizer='true'
+            Monitor_use_central_visualizer='true'
 
-        threshold_on_demand=${20}
+            # available options
+            #TODO
 
-        interval_management=15
+            # create config file
+            echo -e \
+                "{"\
+                "\n  \"CFx\": {"\
+                "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
+                "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
+                "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
+                "\n    \"xmpp_port\": $CFx_xmpp_port,"\
+                "\n    \"tincan_logging\": 2,"\
+                "\n    \"vpn_type\": \"$CFx_vpn_type\","\
+                "\n    \"ip4_mask\": $CFx_ip4_mask,"\
+                "\n    \"stat_report\": false"\
+                "\n  },"\
+                "\n  \"Logger\": {"\
+                "\n    \"controller_logging\": \"INFO\""\
+                "\n  },"\
+                "\n  \"TincanSender\": {"\
+                "\n    \"stun\": [\"$TincanSender_stun\"],"\
+                "\n    \"turn\": [$TincanSender_turn],"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"Monitor\": {"\
+                "\n    \"trigger_con_wait_time\": 120,"\
+                "\n    \"timer_interval\": 5,"\
+                "\n    \"use_central_visualizer\": $Monitor_use_central_visualizer,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"Watchdog\": {"\
+                "\n    \"timer_interval\": 10,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"AddressMapper\": {"\
+                "\n    \"ip4\": \"$AddressMapper_ip4\","\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"BaseTopologyManager\": {"\
+                "\n    \"sec\": true,"\
+                "\n    \"multihop\": false,"\
+                "\n    \"link_trimmer_wait_time\": 30,"\
+                "\n    \"on-demand_connection\": false,"\
+                "\n    \"on-demand_inactive_timeout\": 600,"\
+                "\n    \"timer_interval\": 15,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"LinkManager\": {"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"TincanDispatcher\": {"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"TincanListener\" : {"\
+                "\n    \"socket_read_wait_time\": 15,"\
+                "\n    \"dependencies\": [\"Logger\", \"TincanDispatcher\"]"\
+                "\n  },"\
+                "\n  \"StatReport\": {"\
+                "\n    \"stat_report\": false,"\
+                "\n    \"stat_server\": \"metrics.ipop-project.org\","\
+                "\n    \"stat_server_port\": 8080,"\
+                "\n    \"timer_interval\": 200,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"CentralVisualizer\": {"\
+                "\n    \"enabled\": $CentralVisualizer_enabled,"\
+                "\n    \"name\": \"$CentralVisualizer_name\","\
+                "\n    \"central_visualizer_addr\": \"$CentralVisualizer_central_visualizer_addr\","\
+                "\n    \"central_visualizer_port\": $CentralVisualizer_central_visualizer_port,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  }"\
+                "\n}"\
+                > $IPOP_CONFIG
 
-        use_central_visualizer=$central_visualizer
-        interval_central_visualizer=5
+        ### gvpn configuration
+        else
+            # options reserved by scale-test
+            CFx_xmpp_username="node${ipop_id}@ejabberd"
+            CFx_xmpp_password="password"
+            CFx_xmpp_host=$serv_addr
+            CFx_xmpp_port='5222'
+            CFx_vpn_type='GroupVPN'
+            TincanSender_stun="${serv_addr}:3478"
+            TincanSender_turn="{\"server\":\"$serv_addr:19302\",\"user\":\"node${ipop_id}\",\"pass\":\"password\"}"
+            BaseTopologyManager_ip4='172.31.'$(($ipop_id / 256))'.'$(($ipop_id % 256))
+            CFx_ip4_mask='16'
+            CentralVisualizer_name=$ipop_id
+            CentralVisualizer_central_visualizer_addr=$fwdr_addr
+            CentralVisualizer_central_visualizer_port=$fwdr_port
 
-        interval_ping=300
-        num_pings=5
+            CFx_tincan_logging='2'
+            Logger_controller_logging='INFO'
+            CentralVisualizer_enabled='true'
+            CentralVisualizer_central_visualizer='true'
+            BaseTopologyManager_use_central_visualizer='true'
 
-        # create config file
-        echo -e \
-            "{"\
-            "\n  \"CFx\": {"\
-            "\n    \"xmpp_username\": \"$xmpp_username\","\
-            "\n    \"xmpp_password\": \"$xmpp_password\","\
-            "\n    \"xmpp_host\": \"$xmpp_host\","\
-            "\n    \"xmpp_port\": 5222,"\
-            "\n    \"tincan_logging\": 2,"\
-            "\n    \"vpn_type\": \"GroupVPN\","\
-            "\n    \"ip4_mask\": $ipv4_mask,"\
-            "\n    \"stat_report\": false"\
-            "\n  },"\
-            "\n  \"Logger\": {"\
-            "\n    \"controller_logging\": \"INFO\""\
-            "\n  },"\
-            "\n  \"TincanSender\": {"\
-            "\n    \"switchmode\": 0,"\
-            "\n    \"stun\": [\"$stun\"],"\
-            "\n    \"turn\": [$turn],"\
-            "\n    \"dependencies\": [\"Logger\"]"\
-            "\n  },"\
-            "\n  \"BaseTopologyManager\": {"\
-            "\n    \"ip4\": \"$ipv4\","\
-            "\n    \"sec\": true,"\
-            "\n    \"multihop\": false,"\
-            "\n    \"num_successors\": $num_successors,"\
-            "\n    \"num_chords\": $num_chords,"\
-            "\n    \"num_on_demand\": $num_on_demand,"\
-            "\n    \"num_inbound\": $num_inbound,"\
-            "\n    \"ttl_link_initial\": $ttl_link_initial,"\
-            "\n    \"ttl_link_pulse\": $ttl_link_pulse,"\
-            "\n    \"ttl_chord\": $ttl_chord,"\
-            "\n    \"ttl_on_demand\": $ttl_on_demand,"\
-            "\n    \"threshold_on_demand\": $threshold_on_demand,"\
-            "\n    \"timer_interval\": 1,"\
-            "\n    \"interval_management\": $interval_management,"\
-            "\n    \"use_central_visualizer\": $use_central_visualizer,"\
-            "\n    \"interval_central_visualizer\": $interval_central_visualizer,"\
-            "\n    \"num_pings\": $num_pings,"\
-            "\n    \"interval_ping\": $interval_ping,"\
-            "\n    \"dependencies\": [\"Logger\"]"\
-            "\n  },"\
-            "\n  \"LinkManager\": {"\
-            "\n    \"dependencies\": [\"Logger\"]"\
-            "\n  },"\
-            "\n  \"TincanDispatcher\": {"\
-            "\n    \"dependencies\": [\"Logger\"]"\
-            "\n  },"\
-            "\n  \"TincanListener\" : {"\
-            "\n    \"socket_read_wait_time\": 15,"\
-            "\n    \"dependencies\": [\"Logger\", \"TincanDispatcher\"]"\
-            "\n  },"\
-            "\n    \"StatReport\": {"\
-            "\n    \"stat_report\": false,"\
-            "\n    \"stat_server\": \"metrics.ipop-project.org\","\
-            "\n    \"stat_server_port\": 8080,"\
-            "\n    \"timer_interval\": 200"\
-            "\n  },"\
-            "\n  \"CentralVisualizer\": {"\
-            "\n    \"central_visualizer\": $central_visualizer,"\
-            "\n    \"central_visualizer_addr\": \"$central_visualizer_ipv4\","\
-            "\n    \"central_visualizer_port\": $central_visualizer_port,"\
-            "\n    \"dependencies\": [\"Logger\"]"\
-            "\n  }"\
-            "\n}"\
-            > $IPOP_CONFIG
+            # available options
+            BaseTopologyManager_num_successors=$7
+            BaseTopologyManager_num_chords=$8
+            BaseTopologyManager_num_on_demand=$9
+            BaseTopologyManager_num_inbound=${10}
+            BaseTopologyManager_ttl_link_initial=${11}
+            BaseTopologyManager_ttl_link_pulse=${12}
+            BaseTopologyManager_ttl_chord=${13}
+            BaseTopologyManager_ttl_on_demand=${14}
+            BaseTopologyManager_threshold_on_demand=${15}
+
+            BaseTopologyManager_interval_management='15'
+            BaseTopologyManager_interval_central_visualizer='5'
+            BaseTopologyManager_interval_ping='300'
+            BaseTopologyManager_num_pings='5'
+
+            # create config file
+            echo -e \
+                "{"\
+                "\n  \"CFx\": {"\
+                "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
+                "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
+                "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
+                "\n    \"xmpp_port\": $CFx_xmpp_port,"\
+                "\n    \"tincan_logging\": 2,"\
+                "\n    \"vpn_type\": \"$CFx_vpn_type\","\
+                "\n    \"ip4_mask\": $CFx_ip4_mask,"\
+                "\n    \"stat_report\": false"\
+                "\n  },"\
+                "\n  \"Logger\": {"\
+                "\n    \"controller_logging\": \"INFO\""\
+                "\n  },"\
+                "\n  \"TincanSender\": {"\
+                "\n    \"switchmode\": 0,"\
+                "\n    \"stun\": [\"$TincanSender_stun\"],"\
+                "\n    \"turn\": [$TincanSender_turn],"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"BaseTopologyManager\": {"\
+                "\n    \"ip4\": \"$BaseTopologyManager_ip4\","\
+                "\n    \"sec\": true,"\
+                "\n    \"multihop\": false,"\
+                "\n    \"num_successors\": $BaseTopologyManager_num_successors,"\
+                "\n    \"num_chords\": $BaseTopologyManager_num_chords,"\
+                "\n    \"num_on_demand\": $BaseTopologyManager_num_on_demand,"\
+                "\n    \"num_inbound\": $BaseTopologyManager_num_inbound,"\
+                "\n    \"ttl_link_initial\": $BaseTopologyManager_ttl_link_initial,"\
+                "\n    \"ttl_link_pulse\": $BaseTopologyManager_ttl_link_pulse,"\
+                "\n    \"ttl_chord\": $BaseTopologyManager_ttl_chord,"\
+                "\n    \"ttl_on_demand\": $BaseTopologyManager_ttl_on_demand,"\
+                "\n    \"threshold_on_demand\": $BaseTopologyManager_threshold_on_demand,"\
+                "\n    \"timer_interval\": 1,"\
+                "\n    \"interval_management\": $BaseTopologyManager_interval_management,"\
+                "\n    \"use_central_visualizer\": $BaseTopologyManager_use_central_visualizer,"\
+                "\n    \"interval_central_visualizer\": $BaseTopologyManager_interval_central_visualizer,"\
+                "\n    \"num_pings\": $BaseTopologyManager_num_pings,"\
+                "\n    \"interval_ping\": $BaseTopologyManager_interval_ping,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"LinkManager\": {"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"TincanDispatcher\": {"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"TincanListener\" : {"\
+                "\n    \"socket_read_wait_time\": 15,"\
+                "\n    \"dependencies\": [\"Logger\", \"TincanDispatcher\"]"\
+                "\n  },"\
+                "\n  \"StatReport\": {"\
+                "\n    \"stat_report\": false,"\
+                "\n    \"stat_server\": \"metrics.ipop-project.org\","\
+                "\n    \"stat_server_port\": 8080,"\
+                "\n    \"timer_interval\": 200,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"CentralVisualizer\": {"\
+                "\n    \"enabled\": $CentralVisualizer_enabled,"\
+                "\n    \"name\": \"$CentralVisualizer_name\","\
+                "\n    \"central_visualizer_addr\": \"$CentralVisualizer_central_visualizer_addr\","\
+                "\n    \"central_visualizer_port\": $CentralVisualizer_central_visualizer_port,"\
+                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  }"\
+                "\n}"\
+                > $IPOP_CONFIG
+        fi
         ;;
     (*)
         echo "invalid operation"

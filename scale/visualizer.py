@@ -1,223 +1,228 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # pacman -S tk
+import tkinter                      # gui library
+from math import sin,cos,pi         # math for positioning
+import time                         # ttl and refresh
+from threading import Thread, Lock  # listener thread and sync
+import sys                          # arguments and exit
+import socket                       # listener
+import json                         # decoding packets
+import os                           # full process exit
 
-from threading import Thread # listener thread
-from math import sin,cos,pi  # gui positioning
-import hashlib               # calculating uid
-import time                  # ttl and refresh
-import tkinter               # gui library
-import sys                   # arguments and exit
-import socket                # listener
-import json                  # decoding packets
-
-# canvas object - graphical user interface tool
 class Canvas(object):
-    # initialize canvas
-    def __init__(self, size, header, margin, title):
+    def __init__(self):
         # canvas constants
-        self.WIDTH  = size
-        self.HEADER = header
-        self.HEIGHT = size + self.HEADER
-        self.MARGIN = margin
-        self.MID_X  = self.WIDTH / 2
-        self.MID_Y  = (self.HEIGHT / 2) + (self.HEADER / 2)
-        self.RADIUS = min(self.MID_X, self.MID_Y) - self.MARGIN
+        self.header     = 75
+        self.margin     = 50
+        self.height     = 350
+        self.width      = 350
+        self.center_y   = self.height // 2 + self.header
+        self.center_x   = self.width // 2
+        self.radius     = min(self.height // 2, self.width // 2) - self.margin
+        self.real_height= self.height + self.header
 
         # create canvas
         self.tk = tkinter.Tk()
-        self.tk.title(title)
+        self.tk.title('IPOP Network Visualizer')
         self.tk.configure(background='black')
         self.tk.resizable(0,0)
-        self.canvas = tkinter.Canvas(self.tk, width=self.WIDTH, height=self.HEIGHT, bg='black')
-        self.canvas.pack()
+        self.canvas = tkinter.Canvas(self.tk, width=self.width, height=self.real_height, bg='black')
+        self.canvas.pack(fill=tkinter.BOTH, expand=tkinter.YES)
 
     # canvas operators
     def draw_circle(self, x, y, r, f=None):
         self.canvas.create_oval(x-r,y-r,x+r,y+r, outline='black', width=1, fill=f)
     def draw_line(self, x_i, y_i, x_j, y_j, f=None):
         self.canvas.create_line(x_i, y_i, x_j, y_j, fill=f, width=1)
-    def draw_text(self, x, y, t):
-        self.canvas.create_text(x, y, text=t, fill='white', justify=tkinter.CENTER)
+    def draw_text(self, x, y, t, a='left'):
+        if a == 'left': anchor = tkinter.W
+        else: anchor = tkinter.CENTER
+        self.canvas.create_text(x, y, text=t, fill='white', anchor=anchor)
     def update(self):
         self.tk.update()
     def clear(self):
         self.canvas.delete('all')
 
-# network object - state of the network
-class Network(object):
-    class Node(object):
-        def __init__(self, x, y, n_x, n_y, ip4):
-            self.name       = ip4.split('.')[3]
-            self.ip4        = ip4
-            self.x          = x
-            self.y          = y
-            self.n_x        = n_x
-            self.n_y        = n_y
-            self.time       = 0
-            self.p2p_state  = ""
-            self.links      = {
-                "successor": [], "chord": [], "on_demand": [], "inbound": []
-            }
-
-    def __init__(self, nr_nodes, ip4_addr):
-        self.uid_nid_table = {} # uid to node index mapping
-        self.uid_ip4_table = {} # uid to ipv4 mapping
-        self.nodes = []         # list of nodes indexed by node index
-
-        # create nodes (sorted by uid)
-        parts = ip4_addr.split('.')
-        tmp = (int(parts[0]) << 24) + (int(parts[1]) << 16) + (int(parts[2]) << 8) + int(parts[3])
-
-        for i in range(nr_nodes):
-            p0 = ((tmp + i) >> 24) & 0xFF
-            p1 = ((tmp + i) >> 16) & 0xFF
-            p2 = ((tmp + i) >>  8) & 0xFF
-            p3 = ((tmp + i) >>  0) & 0xFF
-
-            ip4 = str(p0) + "." + str(p1) + "." + str(p2) + "." + str(p3)
-            uid = hashlib.sha1(bytes(ip4,'utf-8')).hexdigest()[:40]
-            self.uid_ip4_table[uid] = ip4
-
-        sorted_uid = sorted(self.uid_ip4_table.keys())
-        for i in range(nr_nodes):
-            uid = sorted_uid[i]
-            ip4 = self.uid_ip4_table[uid]
-            self.uid_nid_table[uid] = i
-
-            x   = canvas.RADIUS * cos(i*2*pi/nr_nodes) + canvas.MID_X
-            y   = canvas.RADIUS * sin(i*2*pi/nr_nodes) + canvas.MID_Y
-            n_x = (20 + canvas.RADIUS) * cos(i*2*pi/nr_nodes) + canvas.MID_X
-            n_y = (20 + canvas.RADIUS) * sin(i*2*pi/nr_nodes) + canvas.MID_Y
-
-            self.nodes.append(Network.Node(x, y, n_x, n_y, ip4))
-
-# listener thread - listens for network state and updates the data accordingly
+### listener thread
 def listener(protocol, recv_ipv4, recv_port):
 
-    # initialize listener socket
-    if protocol == "tcp":
-        recv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        recv_sock.connect((recv_ipv4, recv_port))
-    else:
-        recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        recv_sock.bind((recv_ipv4, recv_port))
-
-    while runnable:
-
-        msg = {}
+    try:
+        # initialize listener socket
         if protocol == "tcp":
-
-            # stream head
-            stream = recv_sock.recv(6)
-            while len(stream) < 6:
-                stream += recv_sock.recv(6 - len(stream))
-            head = int(stream.decode("utf8")[1:5])
-
-            # stream data
-            data = ""
-            while head != 0:
-                stream = recv_sock.recv(head)
-                data += stream.decode("utf8")
-                head -= len(stream)
-
+            recv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            recv_sock.connect((recv_ipv4, recv_port))
         else:
-            gram = recv_sock.recv(8192)
-            data = gram.decode("utf8")
+            recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            recv_sock.bind((recv_ipv4, recv_port))
 
-        msg = json.loads(data)
+        while True:
 
-        print(network.uid_ip4_table[msg["uid"]])
-        node_index = network.uid_nid_table[msg["uid"]]
+            ### listen for messages
+            msg = {}
+            if protocol == "tcp":
+                # stream head
+                stream = recv_sock.recv(6)
+                while len(stream) < 6:
+                    stream += recv_sock.recv(6 - len(stream))
+                head = int(stream.decode("utf8")[1:5])
 
-        network.nodes[node_index].time = int(time.time())
+                # stream data
+                data = ""
+                while head != 0:
+                    stream = recv_sock.recv(head)
+                    data += stream.decode("utf8")
+                    head -= len(stream)
+            else:
+                gram = recv_sock.recv(8192)
+                data = gram.decode("utf8")
 
-        # parse information sentby the BaseTopologyManager
-        if (msg["type"] == "BaseTopologyManager"):
-            network.nodes[node_index].p2p_state = msg["p2p_state"]
+            msg = json.loads(data)
 
-            for con_type in ["successor", "chord", "on_demand", "inbound"]:
-                network.nodes[node_index].links[con_type] = [network.uid_nid_table[x] for x in msg[con_type]]
+            print(msg["name"], msg["uid"], msg["ip4"])
 
+            ### update node state
+            _lock.acquire()
+
+            # update attributes
+            _nodes[msg["uid"]] = {}
+            _nodes[msg["uid"]]["name"]      = msg["name"]
+            _nodes[msg["uid"]]["state"]     = msg["state"]
+            _nodes[msg["uid"]]["uid"]       = msg["uid"]
+            _nodes[msg["uid"]]["ip4"]       = msg["ip4"]
+            _nodes[msg["uid"]]["links"]     = msg["links"]
+            _nodes[msg["uid"]]["vis_time"]  = int(time.time())
+
+            # update node positions if new node
+            if "vis_x" not in _nodes[msg["uid"]]:
+                for i, uid in enumerate(sorted(_nodes.keys())):
+                    _nodes[uid]["vis_x"]      = _canvas.radius*cos(i*2*pi/len(_nodes)-pi/2)+_canvas.center_x
+                    _nodes[uid]["vis_y"]      = _canvas.radius*sin(i*2*pi/len(_nodes)-pi/2)+_canvas.center_y
+                    _nodes[uid]["vis_name_x"] = (20+_canvas.radius)*cos(i*2*pi/len(_nodes)-pi/2)+_canvas.center_x
+                    _nodes[uid]["vis_name_y"] = (20+_canvas.radius)*sin(i*2*pi/len(_nodes)-pi/2)+_canvas.center_y
+
+            _lock.release()
+
+    except:
+        os._exit(1)
+
+### main / drawer thread
 def main():
-    global runnable
-    global canvas
-    global network
+
+    ### init
+    global _nodes
+    global _lock
+    global _canvas
+    global _vpn_type
+
+    _nodes = {}
+    _lock = Lock()
+    _canvas = Canvas()
+
+    LIVE_TIME = 10 # time (in seconds) since a node last updated (assumed alive)
 
     # parse arguments
     try:
         protocol  = str(sys.argv[1])
         recv_ipv4 = str(sys.argv[2])
         recv_port = int(sys.argv[3])
-        ip4_addr  = str(sys.argv[4])
-        nr_nodes  = int(sys.argv[5])
-        canvas_sz = int(sys.argv[6])
+        _vpn_type = str(sys.argv[4])
+
+        if _vpn_type != "svpn" and _vpn_type != "gvpn":
+            raise ValueError
     except:
-        print('usage: ' + sys.argv[0] + ' <protocol> <recv_ipv4> <recv_port> <init_ip4> <nr_nodes> <canvas_sz>')
+        print('usage: ' + sys.argv[0] + ' <protocol> <recv_ipv4> <recv_port> <gvpn | svpn>')
         sys.exit()
 
-    # set runnable state; create canvas and graph objects
-    runnable = True
-    canvas = Canvas(canvas_sz, 75, 50, 'IPOP Network Visualizer')
-    network = Network(nr_nodes, ip4_addr)
-
-    # launch listener
+    # launch listener thread
     thread_listener = Thread(target=listener, args=(protocol, recv_ipv4, recv_port,))
     thread_listener.start()
 
-    # main loop
-    while True:
-        nr_online_nodes = 0
-        nr_successor_links = 0
-        nr_chord_links = 0
-        nr_on_demand_links = 0
+    ### visualizer drawer
+    try:
+        while True:
+            _lock.acquire()
+            uids = list(_nodes.keys())[:]
+            _lock.release()
 
-        # draw links
-        for node in network.nodes:
-            if int(time.time()) < node.time + 10: # assumed online
+            nr_online_nodes     = 0
+            nr_successor_links  = 0
+            nr_chord_links      = 0
+            nr_on_demand_links  = 0
+            nr_links            = 0
 
-                for peer in node.links["on_demand"]:
-                    canvas.draw_line(node.x, node.y, network.nodes[peer].x, network.nodes[peer].y, 'orange')
-                    nr_on_demand_links += 1
-                for peer in node.links["chord"]:
-                    canvas.draw_line(node.x, node.y, network.nodes[peer].x, network.nodes[peer].y, 'white')
-                    nr_chord_links += 1
-                for peer in node.links["successor"]:
-                    canvas.draw_line(node.x, node.y, network.nodes[peer].x, network.nodes[peer].y, 'yellow')
-                    nr_successor_links += 1
+            # draw links
+            for uid in uids:
+                node = _nodes[uid]
 
-        # draw nodes
-        for node in network.nodes:
-            if int(time.time()) < node.time + 10: # assumed online
-                if node.p2p_state == "started":
-                    canvas.draw_circle(node.x, node.y, 5, 'blue')
-                elif node.p2p_state == "searching":
-                    canvas.draw_circle(node.x, node.y, 5, 'yellow')
-                elif node.p2p_state == "connecting":
-                    canvas.draw_circle(node.x, node.y, 5, 'orange')
-                elif node.p2p_state == "connected":
-                    canvas.draw_circle(node.x, node.y, 5, 'green')
-                nr_online_nodes += 1
-            else:
-                canvas.draw_circle(node.x, node.y, 5, 'red')
-            canvas.draw_text(node.n_x, node.n_y, node.name)
+                if int(time.time()) < node["vis_time"] + LIVE_TIME:
 
-        canvas.draw_text(16, 10, "ipv4")
-        canvas.draw_text(20, 25, "nodes")
-        canvas.draw_text(34, 40, "successors")
-        canvas.draw_text(22, 55, "chords")
-        canvas.draw_text(34, 70, "on-demand")
+                    if _vpn_type == 'gvpn':
+                        for peer in list(set(node["links"]["successor"] + node["links"]["chord"] + node["links"]["on_demand"])):
+                            if peer in _nodes:
+                                color = 'red'
+                                if peer in node["links"]["successor"]:
+                                    color = 'yellow'
+                                    nr_successor_links = nr_successor_links + 1
+                                elif peer in node["links"]["chord"]:
+                                    color = 'white'
+                                    nr_chord_links = nr_chord_links + 1
+                                elif peer in node["links"]["on_demand"]:
+                                    color = 'orange'
+                                    nr_on_demand_links = nr_on_demand_links + 1
+                                _canvas.draw_line(node["vis_x"], node["vis_y"], _nodes[peer]["vis_x"], _nodes[peer]["vis_y"], color)
+                                nr_links = nr_links + 1
+                    else: #svpn
+                        for peer in node["links"]:
+                            if peer in _nodes:
+                                _canvas.draw_line(node["vis_x"], node["vis_y"], _nodes[peer]["vis_x"], _nodes[peer]["vis_y"], 'white')
+                                nr_links = nr_links + 1
 
-        canvas.draw_text(120, 10, ip4_addr + " " + str(nr_nodes) + " nodes")
-        canvas.draw_text(120, 25, nr_online_nodes)
-        canvas.draw_text(120, 40, nr_successor_links)
-        canvas.draw_text(120, 55, nr_chord_links)
-        canvas.draw_text(120, 70, nr_on_demand_links // 2)
+            # draw node state
+            for uid in uids:
+                node = _nodes[uid]
 
-        canvas.update()
-        canvas.clear()
+                if int(time.time()) < node["vis_time"] + LIVE_TIME:
+                    if _vpn_type == 'gvpn': 
+                        color = 'red'
+                        if node["state"] == "started":      color = 'blue'
+                        elif node["state"] == "searching":  color = 'yellow'
+                        elif node["state"] == "connecting": color = 'orange'
+                        elif node["state"] == "connected":  color = 'green'
+                        _canvas.draw_circle(node["vis_x"], node["vis_y"], 5, color)
+                    else: #svpn
+                        _canvas.draw_circle(node["vis_x"], node["vis_y"], 5, 'green')
 
-        time.sleep(0.1)
+                    nr_online_nodes = nr_online_nodes + 1
+                else:
+                    _canvas.draw_circle(node["vis_x"], node["vis_y"], 5, 'red')
+                _canvas.draw_text(node["vis_name_x"], node["vis_name_y"], node["name"], 'center')
+
+            # draw header details
+            _canvas.draw_text(5, 10, "vpn type")
+            _canvas.draw_text(5, 25, "nodes")
+            _canvas.draw_text(5, 40, "links")
+
+            if _vpn_type == 'gvpn':
+                _canvas.draw_text(5, 55, "- successors")
+                _canvas.draw_text(5, 70, "- chords")
+                _canvas.draw_text(5, 85, "- on-demand")
+
+            _canvas.draw_text(100, 10, _vpn_type)
+            _canvas.draw_text(100, 25, str(nr_online_nodes) + "/" + str(len(uids)))
+            _canvas.draw_text(100, 40, nr_links)
+
+            if _vpn_type == 'gvpn':
+                _canvas.draw_text(100, 55, nr_successor_links)
+                _canvas.draw_text(100, 70, nr_chord_links)
+                _canvas.draw_text(100, 85, nr_on_demand_links)
+
+            _canvas.update()
+            time.sleep(0.2)
+            _canvas.clear()
+
+    except tkinter.TclError:
+        os._exit(1)
 
 if __name__ == "__main__":
     main()

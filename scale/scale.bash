@@ -16,6 +16,8 @@ SERVER=''
 FORWARDER=''
 SIZE=0
 
+FORWARDER_PROGRAM='visualizer.py'
+
 cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 function prompt()
@@ -52,16 +54,16 @@ while true; do
 
     case $cmd in
 
-        ("download")
-            # download controller sources and ipop-tincan binary from ipop-project/Downloads
-            # TODO static link address
-            wget $DOWNLOAD/$RELEASEDIR/$RELEASENAME.tar.gz
-            tar xf $RELEASENAME.tar.gz
-            cp -r $RELEASENAME/controller node/ipop/
-            cp $RELEASENAME/ipop-tincan node/ipop/
-            rm -r $RELEASENAME
-            rm $RELEASENAME.tar.gz
-            ;;
+#        ("download")
+#            # download controller sources and ipop-tincan binary from ipop-project/Downloads
+#            # TODO static link address
+#            wget $DOWNLOAD/$RELEASEDIR/$RELEASENAME.tar.gz
+#            tar xf $RELEASENAME.tar.gz
+#            cp -r $RELEASENAME/controller node/ipop/
+#            cp $RELEASENAME/ipop-tincan node/ipop/
+#            rm -r $RELEASENAME
+#            rm $RELEASENAME.tar.gz
+#            ;;
         ("accept")
             echo "enter 'yes' to add a node to the list of known hosts"
             for node in ${NODES[@]}; do
@@ -123,39 +125,33 @@ while true; do
             wait
             ;;
         ("config")
-            # obtain ipv4 address of ejabberd server
-            server_node_ethd=$(ssh $SERVER ifconfig | grep eth | awk '{print $1}' | head -n 1)
-            server_node_ipv4=$(ssh $SERVER ifconfig $server_node_ethd | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}')
-
-            # obtain ipv4 address/port of forwarder
-            forwarder_node_ethd=$(ssh $FORWARDER ifconfig | grep eth | awk '{print $1}' | head -n 1)
-            forwarder_node_ipv4=$(ssh $FORWARDER ifconfig $forwarder_node_ethd | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}')
-            forwarder_node_port=51234
+            vpn_type=(${args[0]})
+            serv_addr=$(echo "$SERVER" | cut -d "@" -f2)
+            fwdr_addr=$(echo "$FORWARDER" | cut -d "@" -f2)
+            fwdr_port='50101'
+            params=(${args[@]:1})
 
             # vnodes create IPOP config files
             for node in ${NODES[@]}; do
-                # prepare arguments
-                xmpp_host=$server_node_ipv4
-                stun="$server_node_ipv4:3478"
-                turn="$server_node_ipv4:19302"
-                central_visualizer='true'
-                central_visualizer_ipv4=$forwarder_node_ipv4
-                central_visualizer_port=$forwarder_node_port
-
-                ssh $node "bash $NODE_NODE_SCRIPT config $xmpp_host $stun $turn $central_visualizer $central_visualizer_ipv4 $central_visualizer_port ${args[@]}" &
+                ssh $node "bash $NODE_NODE_SCRIPT config $vpn_type $serv_addr $fwdr_addr $fwdr_port ${params[@]}" &
             done
             wait
             ;;
         ("forward")
-            # obtain ipv4 address/port of forwarder
-            forwarder_node_ethd=$(ssh $FORWARDER ifconfig | grep eth | awk '{print $1}' | head -n 1)
-            forwarder_node_ipv4=$(ssh $FORWARDER ifconfig $forwarder_node_ethd | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}')
-            forwarder_node_port=51234
-            forward_port=${args[0]}
+            forwarder_addr=$(echo "$FORWARDER" | cut -d "@" -f2)
+            forwarder_port='50101'
+            forwarded_port=(${args[0]})
 
-            ssh $FORWARDER "bash $NODE_NODE_SCRIPT forward $forwarder_node_ipv4 $forwarder_node_port $forward_port &" &
+            # launch forwarder
+            ssh $FORWARDER "bash $NODE_NODE_SCRIPT forward $forwarder_addr $forwarder_port $forwarded_port &" &
+            echo "connect visualizer to $forwarder_addr $forwarded_port"
+            ;;
+        ("visualize")
+            forwarder_addr=$(echo "$FORWARDER" | cut -d "@" -f2)
+            forwarded_port=(${args[0]})
+            vpn_type=(${args[1]})
 
-            echo "connect visualizer to $forwarder_node_ipv4 $forward_port"
+            python3 $FORWARDER_PROGRAM tcp $forwarder_addr $forwarded_port $vpn_type &
             ;;
         ("run")
             # check if 'all' is present
@@ -203,22 +199,23 @@ while true; do
         (*)
             echo 'usage:'
             echo '  platform management:'
-            echo '    download           : download controller sources and ipop-tincan binary'
-            echo '    accept             : manually enable connections'
-            echo '    install            : install/prepare resources'
-            echo '    init    [size]     : initialize platform'
-            echo '    restart            : restart services'
-            echo '    exit               : clear platform'
-            echo '    source             : upload sources'
-            echo '    config  <args>     : create IPOP config file'
-            echo '    forward <port>     : run forwarder in background'
+#            echo '    download                       : download controller sources and ipop-tincan binary'
+            echo '    accept                         : manually enable connections'
+            echo '    install                        : install/prepare resources'
+            echo '    init      [size]               : initialize platform'
+            echo '    restart                        : restart services'
+            echo '    exit                           : clear platform'
+            echo '    source                         : upload sources'
+            echo '    config    <args>               : create IPOP config file'
+            echo '    forward   <gvpn|svpn> <port>   : run forwarder in background'
+            echo '    visualize <port> <gvpn|svpn>   : run forwarder in background'
             echo ''
             echo '  IPOP network simulation:'
-            echo '    run     [list|all] : run list|all nodes'
-            echo '    kill    [list|all] : kill list|all nodes'
+            echo '    run       [list|all]           : run list|all nodes'
+            echo '    kill      [list|all]           : kill list|all nodes'
             echo ''
             echo '  utility:'
-            echo '    quit               : quit program'
+            echo '    quit                           : quit program'
             ;;
 
     esac
