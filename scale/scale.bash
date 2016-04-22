@@ -54,16 +54,16 @@ while true; do
 
     case $cmd in
 
-#        ("download")
-#            # download controller sources and ipop-tincan binary from ipop-project/Downloads
-#            # TODO static link address
-#            wget $DOWNLOAD/$RELEASEDIR/$RELEASENAME.tar.gz
-#            tar xf $RELEASENAME.tar.gz
-#            cp -r $RELEASENAME/controller node/ipop/
-#            cp $RELEASENAME/ipop-tincan node/ipop/
-#            rm -r $RELEASENAME
-#            rm $RELEASENAME.tar.gz
-#            ;;
+        ("download")
+            # download controller sources and ipop-tincan binary from ipop-project/Downloads
+            # TODO static link address
+            wget $DOWNLOAD/$RELEASEDIR/$RELEASENAME.tar.gz
+            tar xf $RELEASENAME.tar.gz
+            cp -r $RELEASENAME/controller node/ipop/
+            cp $RELEASENAME/ipop-tincan node/ipop/
+            rm -r $RELEASENAME
+            rm $RELEASENAME.tar.gz
+            ;;
         ("accept")
             echo "enter 'yes' to add a node to the list of known hosts"
             for node in ${NODES[@]}; do

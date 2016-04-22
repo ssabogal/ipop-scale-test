@@ -32,7 +32,7 @@ Create a profile, with at least one node and each node containing the following 
 
 * Node Type ```raw-pc```
 
-* Hardware Type ```C220M4```
+* Hardware Type ```c220g2```
 
 * Disk Image ```Other...``` with URN ```urn:publicid:IDN+emulab.net+image+emulab-ops:UBUNTU15-04-64-STD```
 
@@ -55,7 +55,7 @@ Run the bash script:
 Enter the following commands (see the ```README.md``` in ```scale/``` for information about what these commands do):
 
 ```
-download
+download  # retrieves the latest release of IPOP
 accept    # enter 'yes' if prompted
 install
 init
