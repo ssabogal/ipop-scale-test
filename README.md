@@ -52,7 +52,7 @@ Run the bash script:
 
 ```bash scale/scale.bash```
 
-Enter the following commands (see the ```README.md``` in ```scale/``` for information about what these commands do):
+Enter the following commands:
 
 ```
 download  # retrieves the latest release of IPOP
@@ -110,6 +110,10 @@ visualize <forwarder port> <gvpn | svpn>
 
 #### Using the Ubuntu 14.04 LTS
 
-By default, Scale-Test only supports Ubuntu 15.04. To use Ubuntu 14.04 LTS, modify ```scale/node/node.bash``` and set the variable ```NEW_TEST``` to ```false``` prior to deployment. The usage for Scale-Test is the same.
+By default, Scale-Test only supports Ubuntu 15.04. To use Ubuntu 14.04 LTS, modify ```scale/node/node.bash``` and set the variable ```NEW_TEST``` to ```false``` prior to deployment.
 
 A reference profile with one physical-node and 20 LXC-nodes is available: ```IPOP_SCALE_TEST_1_TRUSTY```
+
+#### Running IPOP with python3
+
+By default, IPOP instances are ran with python2. To run IPOP with python3, modify ```scale/node/ipop/ipop.bash``` and set the variable ```PYTHON``` to ```python3``` prior to deployment.
