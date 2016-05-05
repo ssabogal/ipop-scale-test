@@ -2,7 +2,7 @@
 
 # Ubuntu 15.04 URN: urn:publicid:IDN+emulab.net+image+emulab-ops:UBUNTU15-04-64-STD
 
-IPOP_CONTROLLER_COMMIT="5e5dd792edcb3be62406f20da9030d17bd88026d"
+IPOP_CONTROLLER_COMMIT="v16.01.0"
 IPOP_TINCAN_VER="v16.01.0"
 
 CONF_FILE="./scale.cfg"
@@ -75,7 +75,7 @@ while true; do
             tar xf ipop-${IPOP_TINCAN_VER}_ubuntu.tar.gz
             cp ipop-tincan ../node/ipop/
 
-            cd ..; rm -rf tmp.sources
+            cd ..; #rm -rf tmp.sources
             ;;
         ("accept")
             echo "enter 'yes' to add a node to the list of known hosts"
