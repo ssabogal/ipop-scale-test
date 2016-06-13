@@ -187,10 +187,6 @@ case $1 in
             echo -e \
                 "{"\
                 "\n  \"CFx\": {"\
-                "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
-                "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
-                "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
-                "\n    \"xmpp_port\": $CFx_xmpp_port,"\
                 "\n    \"tincan_logging\": 2,"\
                 "\n    \"vpn_type\": \"$CFx_vpn_type\","\
                 "\n    \"ip4_mask\": $CFx_ip4_mask,"\
@@ -253,11 +249,12 @@ case $1 in
                 "\n  \"XmppClient\": {"\
                 "\n    \"enabled\": true,"\
                 "\n    \"ip4\": \"$BaseTopologyManager_ip4\","\
-                "\n    \"username\": \"$CFx_xmpp_username\","\
-                "\n    \"password\": \"$CFx_xmpp_password\","\
+                "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
+                "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
                 "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
+                "\n    \"xmpp_port\": 5222,"\
                 "\n    \"timer_interval\": 15,"\
-                "\n    \"dependencies\": [\"Logger\"]"\
+                "\n    \"dependencies\": [\"Logger\", \"BaseTopologyManager\"]"\
                 "\n  }"\
                 "\n}"\
                 > $IPOP_CONFIG
