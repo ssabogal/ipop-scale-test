@@ -254,7 +254,7 @@ case $1 in
                 "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
                 "\n    \"xmpp_port\": 5222,"\
                 "\n    \"xmpp_authentication_method\": \"password\","\
-                "\n    \"xmpp_accept_untrusted_server\": false,"\
+                "\n    \"xmpp_accept_untrusted_server\": true,"\
                 "\n    \"truststore\": \"/etc/ssl/certs/ca-certificates.crt\","\
                 "\n    \"timer_interval\": 15,"\
                 "\n    \"dependencies\": [\"Logger\", \"BaseTopologyManager\"]"\
