@@ -155,7 +155,7 @@ case $1 in
             CFx_vpn_type='GroupVPN'
             TincanSender_stun="${serv_addr}:3478"
             TincanSender_turn="{\"server\":\"$serv_addr:19302\",\"user\":\"node${ipop_id}\",\"pass\":\"password\"}"
-            BaseTopologyManager_ip4='172.31.'$(($ipop_id / 256))'.'$(($ipop_id % 256))
+            CFx_ip4='172.31.'$(($ipop_id / 256))'.'$(($ipop_id % 256))
             CFx_ip4_mask='16'
             CentralVisualizer_name=$ipop_id
             CentralVisualizer_central_visualizer_addr=$fwdr_addr
@@ -189,6 +189,7 @@ case $1 in
                 "\n  \"CFx\": {"\
                 "\n    \"tincan_logging\": 2,"\
                 "\n    \"vpn_type\": \"$CFx_vpn_type\","\
+                "\n    \"ip4\": \"$CFx_ip4\","\
                 "\n    \"ip4_mask\": $CFx_ip4_mask,"\
                 "\n    \"stat_report\": false"\
                 "\n  },"\
@@ -202,7 +203,6 @@ case $1 in
                 "\n    \"dependencies\": [\"Logger\"]"\
                 "\n  },"\
                 "\n  \"BaseTopologyManager\": {"\
-                "\n    \"ip4\": \"$BaseTopologyManager_ip4\","\
                 "\n    \"sec\": true,"\
                 "\n    \"multihop\": false,"\
                 "\n    \"num_successors\": $BaseTopologyManager_num_successors,"\
@@ -248,7 +248,6 @@ case $1 in
                 "\n  },"\
                 "\n  \"XmppClient\": {"\
                 "\n    \"enabled\": true,"\
-                "\n    \"ip4\": \"$BaseTopologyManager_ip4\","\
                 "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
                 "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
                 "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
