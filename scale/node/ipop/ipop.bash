@@ -182,6 +182,7 @@ case $1 in
             BaseTopologyManager_interval_central_visualizer='5'
             BaseTopologyManager_interval_ping='300'
             BaseTopologyManager_num_pings='5'
+            
 
             # create config file
             echo -e \
@@ -252,6 +253,9 @@ case $1 in
                 "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
                 "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
                 "\n    \"xmpp_port\": 5222,"\
+                "\n    \"xmpp_authentication_method\": \"password\","\
+                "\n    \"xmpp_accept_untrusted_server\": false,"\
+                "\n    \"truststore\": \"/etc/ssl/certs/ca-certificates.crt\","\
                 "\n    \"timer_interval\": 15,"\
                 "\n    \"dependencies\": [\"Logger\", \"BaseTopologyManager\"]"\
                 "\n  }"\
