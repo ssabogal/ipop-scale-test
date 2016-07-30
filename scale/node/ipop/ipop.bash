@@ -78,17 +78,13 @@ case $1 in
             echo -e \
                 "{"\
                 "\n  \"CFx\": {"\
-                "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
-                "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
-                "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
-                "\n    \"xmpp_port\": $CFx_xmpp_port,"\
                 "\n    \"tincan_logging\": 2,"\
                 "\n    \"vpn_type\": \"$CFx_vpn_type\","\
                 "\n    \"ip4_mask\": $CFx_ip4_mask,"\
                 "\n    \"stat_report\": false"\
                 "\n  },"\
                 "\n  \"Logger\": {"\
-                "\n    \"controller_logging\": \"INFO\""\
+                "\n    \"controller_logging\": \"DEBUG\""\
                 "\n  },"\
                 "\n  \"TincanSender\": {"\
                 "\n    \"stun\": [\"$TincanSender_stun\"],"\
@@ -141,6 +137,18 @@ case $1 in
                 "\n    \"central_visualizer_addr\": \"$CentralVisualizer_central_visualizer_addr\","\
                 "\n    \"central_visualizer_port\": $CentralVisualizer_central_visualizer_port,"\
                 "\n    \"dependencies\": [\"Logger\"]"\
+                "\n  },"\
+                "\n  \"XmppClient\": {"\
+                "\n    \"enabled\": true,"\
+                "\n    \"xmpp_username\": \"$CFx_xmpp_username\","\
+                "\n    \"xmpp_password\": \"$CFx_xmpp_password\","\
+                "\n    \"xmpp_host\": \"$CFx_xmpp_host\","\
+                "\n    \"xmpp_port\": 5222,"\
+                "\n    \"xmpp_authentication_method\": \"password\","\
+                "\n    \"xmpp_accept_untrusted_server\": true,"\
+                "\n    \"truststore\": \"/etc/ssl/certs/ca-certificates.crt\","\
+                "\n    \"timer_interval\": 15,"\
+                "\n    \"dependencies\": [\"Logger\", \"BaseTopologyManager\"]"\
                 "\n  }"\
                 "\n}"\
                 > $IPOP_CONFIG

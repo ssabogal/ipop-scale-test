@@ -33,12 +33,6 @@ class TincanSender(ControllerModule):
             query_uid = cbt.data
             self.do_get_state(self.sock, query_uid)
 
-        #elif cbt.action == 'DO_SEND_MSG':
-            #method = cbt.data.get("method")
-            #overlay_id = cbt.data.get("overlay_id")
-            #uid = cbt.data.get("uid")
-            #data = cbt.data.get("data")
-            #self.do_send_msg(self.sock, method, overlay_id, uid, data)
 
         elif cbt.action == 'DO_SET_REMOTE_IP':
             uid = cbt.data.get("uid")
@@ -54,7 +48,7 @@ class TincanSender(ControllerModule):
                                   dest_addr=dest_addr, dest_port=dest_port,
                                   payload=None, type="echo_reply")
 
-        elif cbt.action == '_msg_ICC_MSG':
+        elif cbt.action == 'DO_SEND_ICC_MSG':
             src_uid = cbt.data.get('src_uid')
             dst_uid = cbt.data.get('dst_uid')
             icc_type = cbt.data.get('icc_type')
@@ -101,10 +95,6 @@ class TincanSender(ControllerModule):
 
     def do_get_state(self, sock, peer_uid="", stats=True):
         return self.make_call(sock, m="get_state", uid=peer_uid, stats=stats)
-
-    def do_send_msg(self, sock, method, overlay_id, uid, data):
-        return self.make_call(sock, m=method, overlay_id=overlay_id,
-                              uid=uid, data=data)
 
     def do_set_remote_ip(self, sock, uid, ip4, ip6):
         if self.CMConfig["switchmode"] == 1:

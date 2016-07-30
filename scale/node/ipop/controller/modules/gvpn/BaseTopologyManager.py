@@ -61,7 +61,7 @@ class BaseTopologyManager(ControllerModule):
 
         # populate uid_ip4_table and ip4_uid_table with all UID and IPv4
         # mappings within the /16 subnet
-        parts = self.CMConfig["ip4"].split(".")
+        parts = self.CFxHandle.queryParam("ip4").split(".")
         ip_prefix = parts[0] + "." + parts[1] + "."
         for i in range(0, 255):
             for j in range(0, 255):
@@ -141,6 +141,8 @@ class BaseTopologyManager(ControllerModule):
         }
 
         self.send_msg_srv("con_ack", uid, json.dumps(data))
+        log = "sent con_ack to {0}".format(uid)
+        self.registerCBT('Logger','info', log)
 
     # create connection
     #   establish a tincan link
@@ -213,7 +215,7 @@ class BaseTopologyManager(ControllerModule):
             self.peers[uid] = {
                 "uid": uid,
                 "ttl": time.time() + self.CMConfig["ttl_link_initial"],
-                "con_status": "unknown"
+                "con_status": "sent_con_req"
             }
 
             # connection request
@@ -225,19 +227,68 @@ class BaseTopologyManager(ControllerModule):
     # add inbound link
     def add_inbound_link(self, con_type, uid, fpr):
 
-        # peer is not in the peers list, or
-        # peer is in the list and this node's uid is smaller (race avoidance)
-        if (uid not in self.peers.keys()) or (uid in self.peers.keys() and self.uid < uid):
+        
+        # recvd con_req and sender is in peers_list - uncommon case
 
-            # add peer to peers list
+        if (uid in self.peers.keys()):
+            log_msg = "AIL: Recvd con_req for peer in list from {0} status {1}".format(uid,self.peers[uid]["con_status"])
+            self.registerCBT('Logger','info',log_msg)
+
+            # if node has received con_req, re-respond (in case it was lost)
+            if (self.peers[uid]["con_status"] == "recv_con_req"):
+                log_msg = "AIL: Resending respond_connection to {0}".format(uid)
+                self.registerCBT('Logger','info',log_msg)
+                self.respond_connection(con_type, uid, fpr)
+                return
+
+            # else if node has sent con_request concurrently
+            elif (self.peers[uid]["con_status"] == "sent_con_req"):
+                # peer with smaller UID sends a response 
+                if (self.uid < uid):
+                    log_msg = "AIL: SmallerUID respond_connection to {0}".format(uid)
+                    self.registerCBT('Logger','info',log_msg)
+                    self.peers[uid] = {
+                        "uid": uid,
+                        "ttl": time.time() + self.CMConfig["ttl_link_initial"],
+                        "con_status": "conc_sent_response"
+                    }
+                    self.respond_connection(con_type, uid, fpr)
+                # peer with larger UID ignores 
+                else:
+                    log_msg = "AIL: LargerUID ignores from {0}".format(uid)
+                    self.registerCBT('Logger','info',log_msg)
+                    self.peers[uid] = {
+                        "uid": uid,
+                        "ttl": time.time() + self.CMConfig["ttl_link_initial"],
+                        "con_status": "conc_no_response"
+                    }
+                return
+
+            # if node was in any other state:
+            # replied or ignored a concurrent send request:
+            #    conc_no_response, conc_sent_response
+            # or if status is online or offline, 
+            # remove link and wait to try again
+            else:
+                log_msg = "AIL: Giving up, remove_connection from {0}".format(uid)
+                self.registerCBT('Logger','info',log_msg)
+                self.remove_connection(uid)
+
+        # recvd con_req and sender is not in peers list - common case
+        else:
+            # add peer to peers list and set status as having received and
+            # responded to con_req
+            log_msg = "AIL: Recvd con_req for peer not in list {0}".format(uid)
+            self.registerCBT('Logger','info',log_msg)
             self.peers[uid] = {
                 "uid": uid,
                 "ttl": time.time() + self.CMConfig["ttl_link_initial"],
-                "con_status": "unknown"
+                "con_status": "recv_con_req"
             }
 
             # connection response
             self.respond_connection(con_type, uid, fpr)
+            
 
     # remove link
     def remove_link(self, con_type, uid):
