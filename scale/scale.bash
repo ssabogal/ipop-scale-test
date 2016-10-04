@@ -1,7 +1,7 @@
 #!/bin/bash
 
-IPOP_CONTROLLER_COMMIT="v16.01.1"
-IPOP_TINCAN_VER="v16.01.1"
+IPOP_CONTROLLER_COMMIT="v16.08.0"
+IPOP_TINCAN_VER="v16.08.0"
 
 CONF_FILE="./scale.cfg"
 NODE_PATH="./node"
@@ -15,7 +15,8 @@ SIZE=0
 
 FORWARDER_PROGRAM='visualizer.py'
 
-cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd $cwd
 
 function prompt()
 {
@@ -65,15 +66,15 @@ while true; do
             git clone $IPOP_CONTROLLER_REPO
             cd controllers
             git checkout $IPOP_CONTROLLER_COMMIT
-            cd ..
-            cp -r controllers/controller ../node/ipop/
+            cd -
+            cp -r controllers/controller $cwd/node/ipop/
 
             # obtain ipop-tincan binary
             wget $IPOP_TINCAN_URL
             tar xf ipop-${IPOP_TINCAN_VER}_ubuntu.tar.gz
-            cp ipop-tincan ../node/ipop/
+            cp ipop-${IPOP_TINCAN_VER}_ubuntu/ipop-tincan $cwd/node/ipop/
 
-            cd ..; rm -rf tmp.sources
+            cd $cwd; rm -rf tmp.sources
             ;;
         ("accept")
             echo "enter 'yes' to add a node to the list of known hosts"

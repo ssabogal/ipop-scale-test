@@ -56,6 +56,9 @@ case $1 in
         # install additional packages; allow tap device
         sudo chroot /var/lib/lxc/default/rootfs apt-get update
         sudo chroot /var/lib/lxc/default/rootfs apt-get -y install $DEFAULT_LXC_PACKAGES
+        # install python-pip and sleekXMPP
+        sudo chroot /var/lib/lxc/default/rootfs apt-get -y install 'python-pip'
+        sudo chroot /var/lib/lxc/default/rootfs pip install 'sleekxmpp'
         echo 'lxc.cgroup.devices.allow = c 10:200 rwm' | sudo tee --append $DEFAULT_LXC_CONFIG
 
         ### install ejabberd
