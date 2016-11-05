@@ -1,8 +1,5 @@
 #!/bin/sh
 
-IPOP_CONTROLLER_REPO="https://github.com/ipop-project/controllers"
-IPOP_TINCAN_URL="https://github.com/ipop-project/Downloads/releases/download/$IPOP_TINCAN_VER/ipop-${IPOP_TINCAN_VER}_ubuntu.tar.gz"
-
 IPOP_CONTROLLER_COMMIT="v16.08.0"
 IPOP_TINCAN_VER="v16.08.0"
 
@@ -55,6 +52,9 @@ args="${@#* }"
 
 case $cmd in
     ("download")
+        IPOP_CONTROLLER_REPO="https://github.com/ipop-project/controllers"
+        IPOP_TINCAN_URL="https://github.com/ipop-project/Downloads/releases/download/$IPOP_TINCAN_VER/ipop-${IPOP_TINCAN_VER}_ubuntu.tar.gz"
+
         mkdir tmp.sources; cd tmp.sources
 
         # obtain controller sources
@@ -81,7 +81,7 @@ case $cmd in
         # compress local sources; transfer sources to each node; nodes install
         tar -zcvf node.tar.gz $NODE_PATH
         for node in $NODES; do
-            bash -c "
+            sh -c "
                 scp node.tar.gz $node:~/
                 ssh $node 'tar xf node.tar.gz; bash $NODE_NODE_SCRIPT install';
             " &
@@ -120,7 +120,7 @@ case $cmd in
         # compress local sources; transfer sources to each node; nodes update souces of each vnode
         tar -zcvf node.tar.gz $NODE_PATH
         for node in $NODES; do
-            bash -c "
+            sh -c "
                 scp node.tar.gz $node:~/
                 ssh $node 'tar xf node.tar.gz; bash $NODE_NODE_SCRIPT source';
             " &
