@@ -7,15 +7,8 @@ CONF_FILE="./scale.cfg"
 NODE_PATH="./node"
 NODE_NODE_SCRIPT='./node/node.bash'
 
-NODES=""
-NR_NODES=0
-SERVER=''
-FORWARDER=''
-SIZE=0
-
 FORWARDER_PROGRAM='visualizer.py'
 
-#XXX cwd=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 cwd=$(pwd)
 cd $cwd
 
@@ -25,25 +18,7 @@ index()
 }
 
 # parse config file
-while read line; do
-    opt=$(echo $line | awk '{print $1}')
-    arg=$(echo $line | awk '{print $2}')
-
-    case $opt in
-        ("NODE")
-            NODES="$NODES $arg";;
-        ("SERVER")
-            SERVER="$arg";;
-        ("FORWARDER")
-            FORWARDER="$arg";;
-        ("SIZE")
-            SIZE="$arg";;
-        ("CONTROLLER")
-            IPOP_CONTROLLER_COMMIT="$arg";;
-        ("TINCAN")
-            IPOP_TINCAN_VER="$arg";;
-    esac
-done < $CONF_FILE
+. $CONF_FILE
 NR_NODES=$(echo "$NODES" | wc -w)
 
 # main
