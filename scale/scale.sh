@@ -1,12 +1,8 @@
 #!/bin/sh
 
-IPOP_CONTROLLER_COMMIT="v16.08.0"
-IPOP_TINCAN_VER="v16.08.0"
-
 CONF_FILE="./scale.cfg"
 NODE_PATH="./node"
 NODE_NODE_SCRIPT='./node/node.bash'
-
 FORWARDER_PROGRAM='visualizer.py'
 
 cwd=$(pwd)
