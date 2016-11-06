@@ -60,7 +60,7 @@ TINCAN="v16.08.0"
 
 Run the shell script:
 
-`sh scale/scale.bash`
+`sh scale/scale.sh`
 
 Enter the following commands:
 
