@@ -44,7 +44,7 @@ Open the `List View` tab to view the connections. In `scale/scale.cfg`, assign t
 
 Specify the `CONTROLLER` and `TINCAN` variables with the tag or commit of the IPOP controller and tincan.
 
-For example, the following configuration has 2 node (with one assuming the server and forwarder roles) with 20 LXCs (10 LXCs each) using version 16.08.0 of the IPOP controller and tincan:
+For example, the following configuration has 2 nodes (with one assuming the server and forwarder roles) with 20 LXCs (10 LXCs each) using version 16.08.0 of the IPOP controller and tincan:
 
 ```sh
 #!/bin/sh
