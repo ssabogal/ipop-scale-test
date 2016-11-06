@@ -46,7 +46,7 @@ Specify the `CONTROLLER` and `TINCAN` variables with the tag or commit of the IP
 
 For example, the following configuration has 2 node (with one assuming the server and forwarder roles) with 20 LXCs (10 LXCs each) using version 16.08.0 of the IPOP controller and tincan:
 
-```bash
+```sh
 #!/bin/sh
 
 NODES="ipopuser@c220g2-011012.wisc.cloudlab.us ipopuser@c220g2-011013.wisc.cloudlab.us"
@@ -64,7 +64,7 @@ Run the shell script:
 
 Enter the following commands:
 
-```bash
+```sh
 download  # retrieves the IPOP sources specified by CONTROLLER and TINCAN or the defaults
 accept    # enter 'yes' if prompted
 install
@@ -109,9 +109,9 @@ The `config` command supports user-configurable options for generating highly cu
 
 Note: the visualizer depends on TKinter, use `pacman -S tk` (in Archlinux) or `apt-get install python3-tk` (in Ubuntu/Debian).
 
-In scale.bash:
+In scale.sh:
 
-```bash
+```sh
 forward <forwarder port>
 visualize <forwarder port> <gvpn | svpn>
 ```
